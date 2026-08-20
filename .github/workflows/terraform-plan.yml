@@ -75,7 +75,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const path = 'terraform/plan_output.txt';
+            const path = 'plan_output.txt';
             let planText = '';
             try {
               planText = fs.readFileSync(path, 'utf8');

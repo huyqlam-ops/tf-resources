@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
 
     environment:
-      name: dev # đổi lại nếu code tf không nằm trong thư mục này
+      name: dev 
 
     steps:
       - name: Checkout code

@@ -24,6 +24,10 @@ jobs:
   terraform-plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
+
+    environment:
+      name: dev
+
     defaults:
       run:
         working-directory: ./terraform   # đổi lại nếu code tf không nằm trong thư mục này

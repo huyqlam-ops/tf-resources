@@ -1,0 +1,15 @@
+# Thư mục cache & plugin
+.terraform/
+
+# File trạng thái local
+*.tfstate
+*.tfstate.*
+
+# File plan & log tạm
+*.tfplan
+plan_output.txt
+*.log
+
+# File biến chứa secret local
+*.tfvars
+*.tfvars.json

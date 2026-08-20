@@ -26,11 +26,7 @@ jobs:
     runs-on: ubuntu-latest
 
     environment:
-      name: dev
-
-    defaults:
-      run:
-        working-directory: ./terraform   # đổi lại nếu code tf không nằm trong thư mục này
+      name: dev # đổi lại nếu code tf không nằm trong thư mục này
 
     steps:
       - name: Checkout code

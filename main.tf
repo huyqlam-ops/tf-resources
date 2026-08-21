@@ -158,6 +158,46 @@ resource "azurerm_role_assignment" "ingest_acr_pull" {
   principal_id         = azurerm_user_assigned_identity.ingest_identity.principal_id
 }
 
+# ---- Event Hubs: report chỉ gửi (least privilege - không cần Owner) ----
+resource "azurerm_role_assignment" "report_eventhub_sender" {
+  scope                = azurerm_eventhub_namespace.ehns.id
+  role_definition_name = "Azure Event Hubs Data Sender"
+  principal_id         = azurerm_user_assigned_identity.report_identity.principal_id
+}
+
+# ---- Event Hubs: ingest chỉ nhận ----
+resource "azurerm_role_assignment" "ingest_eventhub_receiver" {
+  scope                = azurerm_eventhub_namespace.ehns.id
+  role_definition_name = "Azure Event Hubs Data Receiver"
+  principal_id         = azurerm_user_assigned_identity.ingest_identity.principal_id
+}
+
+# ---- Blob Storage: chỉ ingest cần, vì Spring Cloud Azure EventProcessor
+#      dùng blob container "checkpoint" để lưu vị trí đã đọc tới đâu ----
+resource "azurerm_role_assignment" "ingest_blob_contributor" {
+  scope                = azurerm_storage_account.storage.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.ingest_identity.principal_id
+}
+
+# ---- Cosmos DB: chỉ ingest ghi dữ liệu report đã xử lý ----
+resource "azurerm_cosmosdb_sql_role_assignment" "ingest_cosmos_rbac" {
+  resource_group_name = azurerm_resource_group.rg.name
+  account_name        = azurerm_cosmosdb_account.cosmos.name
+  role_definition_id  = "${azurerm_cosmosdb_account.cosmos.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002" # Data Contributor
+  principal_id        = azurerm_user_assigned_identity.ingest_identity.principal_id
+  scope                = azurerm_cosmosdb_account.cosmos.id
+}
+
+# ---- Cosmos DB: report chỉ ĐỌC để trả dữ liệu qua API (bỏ nếu report không đọc trực tiếp Cosmos) ----
+resource "azurerm_cosmosdb_sql_role_assignment" "report_cosmos_reader" {
+  resource_group_name = azurerm_resource_group.rg.name
+  account_name        = azurerm_cosmosdb_account.cosmos.name
+  role_definition_id  = "${azurerm_cosmosdb_account.cosmos.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000001" # Data Reader (built-in, chỉ đọc)
+  principal_id        = azurerm_user_assigned_identity.report_identity.principal_id
+  scope                = azurerm_cosmosdb_account.cosmos.id
+}
+
 # 9. Container App - Report
 resource "azurerm_container_app" "report" {
   name                         = "ca-report-${random_string.suffix.result}"
@@ -176,12 +216,36 @@ resource "azurerm_container_app" "report" {
   }
 
   template {
+    min_replicas = 0
+    max_replicas = 1
+
     container {
       name   = "report"
       # Ảnh placeholder cho lần apply đầu tiên - CI/CD sẽ cập nhật ảnh thật sau khi build & push lên ACR
       image  = "mcr.microsoft.com/k8se/quickstart:latest"
       cpu    = 0.5
       memory = "1Gi"
+      
+      env {
+        name  = "AZURE_EVENTHUBS_NAMESPACE"
+        value = azurerm_eventhub_namespace.ehns.name
+      }
+      env {
+        name  = "AZURE_EVENTHUBS_NAME"
+        value = azurerm_eventhub.eh.name
+      }
+      env {
+        name  = "AZURE_STORAGE_ACCOUNT"
+        value = azurerm_storage_account.storage.name
+      }
+      env {
+        name  = "STORAGE_CONTAINER_NAME"
+        value = azurerm_storage_container.container.name
+      }
+      env {
+        name  = "AZURE_CLIENT_ID"
+        value = azurerm_user_assigned_identity.report_identity.client_id
+      }
     }
   }
 
@@ -225,6 +289,39 @@ resource "azurerm_container_app" "ingest" {
       image  = "mcr.microsoft.com/k8se/quickstart:latest"
       cpu    = 0.5
       memory = "1Gi"
+
+      env {
+        name  = "AZURE_STORAGE_ACCOUNT"
+        value = azurerm_storage_account.storage.name
+      }
+      env {
+        name  = "STORAGE_CONTAINER_NAME"
+        value = azurerm_storage_container.container.name
+      }
+      env {
+        name  = "STORAGE_CONTAINER_CHECKPOINT"
+        value = azurerm_storage_container.checkpoint.name
+      }
+      env {
+        name  = "AZURE_EVENTHUBS_NAMESPACE"
+        value = azurerm_eventhub_namespace.ehns.name
+      }
+      env {
+        name  = "AZURE_EVENTHUBS_NAME"
+        value = azurerm_eventhub.eh.name
+      }
+      env {
+        name  = "AZURE_COSMOS_ENDPOINT"
+        value = azurerm_cosmosdb_account.cosmos.endpoint
+      }
+      env {
+        name  = "AZURE_COSMOS_DATABASE"
+        value = azurerm_cosmosdb_sql_database.db.name
+      }
+      env {
+        name  = "AZURE_CLIENT_ID"
+        value = azurerm_user_assigned_identity.ingest_identity.client_id
+      }
     }
   }
 

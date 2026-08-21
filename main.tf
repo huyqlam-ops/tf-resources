@@ -180,6 +180,12 @@ resource "azurerm_role_assignment" "ingest_blob_contributor" {
   principal_id         = azurerm_user_assigned_identity.ingest_identity.principal_id
 }
 
+resource "azurerm_role_assignment" "report_blob_contributor" {
+  scope                = azurerm_storage_account.storage.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.report_identity.principal_id
+}
+
 # ---- Cosmos DB: chỉ ingest ghi dữ liệu report đã xử lý ----
 resource "azurerm_cosmosdb_sql_role_assignment" "ingest_cosmos_rbac" {
   resource_group_name = azurerm_resource_group.rg.name

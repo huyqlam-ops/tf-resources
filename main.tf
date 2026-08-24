@@ -390,8 +390,8 @@ resource "azurerm_container_app" "ingest" {
 
         loki.source.file "app_logs" {
           targets = [{
-            __path__ = "/var/log/app/app.log"
-            app      = "ingest"
+            __path__ = "/var/log/app/app.log",
+            app      = "ingest",
           }]
           forward_to = [loki.write.default.receiver]
         }

@@ -63,11 +63,6 @@ output "ingest_app_fqdn" {
   value       = azurerm_container_app.ingest.name   # hoặc .latest_revision_fqdn nếu ingress external = true
 }
 
-output "report_app_fqdn" {
-  description = "FQDN của Ingest Container App (nếu có bật ingress external)"
-  value       = azurerm_container_app.report.name   # hoặc .latest_revision_fqdn nếu ingress external = true
-}
-
 output "container_app_resource_group" {
   value = azurerm_resource_group.rg.name
 }

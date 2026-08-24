@@ -384,7 +384,7 @@ resource "azurerm_container_app" "ingest" {
 
         prometheus.remote_write "default" {
           endpoint {
-            url = "http://${azurerm_container_app.prometheus.ingress[0].fqdn}/api/v1/write"
+            url = "https://${azurerm_container_app.prometheus.ingress[0].fqdn}/api/v1/write"
           }
         }
 
@@ -398,7 +398,7 @@ resource "azurerm_container_app" "ingest" {
 
         loki.write "default" {
           endpoint {
-            url = "http://${azurerm_container_app.loki.ingress[0].fqdn}/loki/api/v1/push"
+            url = "https://${azurerm_container_app.loki.ingress[0].fqdn}/loki/api/v1/push"
           }
         }
         EOF

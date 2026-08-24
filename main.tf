@@ -225,12 +225,21 @@ resource "azurerm_container_app" "report" {
     min_replicas = 0
     max_replicas = 1
 
+    volume {
+      name = "shared-logs"
+    }
+
     container {
       name   = "report"
       # Ảnh placeholder cho lần apply đầu tiên - CI/CD sẽ cập nhật ảnh thật sau khi build & push lên ACR
       image  = "mcr.microsoft.com/k8se/quickstart:latest"
       cpu    = 0.5
       memory = "1Gi"
+
+      volume_mounts {
+        name = "shared-logs"
+        path = "/var/log/app"
+      }
       
       env {
         name  = "AZURE_EVENTHUBS_NAMESPACE"
@@ -251,6 +260,11 @@ resource "azurerm_container_app" "report" {
       env {
         name  = "AZURE_CLIENT_ID"
         value = azurerm_user_assigned_identity.report_identity.client_id
+      }
+
+      env {
+        name = "LOG_FILE_PATH" 
+        value = "/var/log/app/app.log"
       }
     }
   }
@@ -291,13 +305,22 @@ resource "azurerm_container_app" "ingest" {
 
   template {
     min_replicas = 1
-    max_replicas = 1
+    max_replicas = 2
+
+    volume {
+      name = "shared-logs"
+    }
 
     container {
       name   = "ingest"
       image  = "mcr.microsoft.com/k8se/quickstart:latest"
       cpu    = 0.5
       memory = "1Gi"
+
+      volume_mounts {
+        name = "shared-logs"
+        path = "/var/log/app"
+      }
 
       env {
         name  = "AZURE_STORAGE_ACCOUNT"
@@ -331,6 +354,54 @@ resource "azurerm_container_app" "ingest" {
         name  = "AZURE_CLIENT_ID"
         value = azurerm_user_assigned_identity.ingest_identity.client_id
       }
+
+      env {
+        name = "LOG_FILE_PATH" 
+        value = "/var/log/app/app.log"
+      }
+    }
+
+    container {
+      name   = "alloy"
+      image  = "grafana/alloy:latest"
+      cpu    = 0.25
+      memory = "0.5Gi"
+
+      volume_mounts {
+        name = "shared-logs"
+        path = "/var/log/app"
+      }
+
+      command = ["/bin/sh", "-c"]
+      args = [
+        <<-EOT
+        cat <<'EOF' > /etc/alloy/config.alloy
+        prometheus.scrape "app" {
+          targets = [{"__address__" = "localhost:8080"}]
+          metrics_path = "/actuator/prometheus"
+          forward_to = [prometheus.remote_write.default.receiver]
+        }
+
+        prometheus.remote_write "default" {
+          endpoint {
+            url = "http://${azurerm_container_app.prometheus.ingress[0].fqdn}/api/v1/write"
+          }
+        }
+
+        loki.source.file "app_logs" {
+          targets = [{__path__ = "/var/log/app/app.log"}]
+          forward_to = [loki.write.default.receiver]
+        }
+
+        loki.write "default" {
+          endpoint {
+            url = "http://${azurerm_container_app.loki.ingress[0].fqdn}/loki/api/v1/push"
+          }
+        }
+        EOF
+        exec /bin/alloy run /etc/alloy/config.alloy --server.http.listen-addr=0.0.0.0:12345 --stability.level=experimental
+        EOT
+      ]
     }
   }
 
@@ -347,5 +418,9 @@ resource "azurerm_container_app" "ingest" {
     ignore_changes = [template[0].container[0].image]
   }
 
-  depends_on = [azurerm_role_assignment.ingest_acr_pull]
+  depends_on = [
+    azurerm_role_assignment.report_acr_pull,
+    azurerm_container_app.prometheus,
+    azurerm_container_app.loki,
+  ]
 }

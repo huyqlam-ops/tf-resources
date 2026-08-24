@@ -57,3 +57,16 @@ output "cosmosdb_database_name" {
   description = "Tên Cosmos DB Database"
   value       = azurerm_cosmosdb_sql_database.db.name
 }
+
+output "ingest_app_fqdn" {
+  description = "FQDN của Ingest Container App (nếu có bật ingress external)"
+  value       = azurerm_container_app.ingest.name   # hoặc .latest_revision_fqdn nếu ingress external = true
+}
+
+output "container_app_resource_group" {
+  value = azurerm_resource_group.rg.name
+}
+
+output "acr_name" {
+  value = azurerm_container_registry.acr.name   # tên gốc, không kèm .azurecr.io
+}

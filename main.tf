@@ -389,7 +389,10 @@ resource "azurerm_container_app" "ingest" {
         }
 
         loki.source.file "app_logs" {
-          targets = [{__path__ = "/var/log/app/app.log"}]
+          targets = [{
+            __path__ = "/var/log/app/app.log"
+            app      = "ingest"
+          }]
           forward_to = [loki.write.default.receiver]
         }
 
@@ -419,7 +422,7 @@ resource "azurerm_container_app" "ingest" {
   }
 
   depends_on = [
-    azurerm_role_assignment.report_acr_pull,
+    azurerm_role_assignment.ingest_acr_pull,
     azurerm_container_app.prometheus,
     azurerm_container_app.loki,
   ]

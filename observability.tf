@@ -13,6 +13,9 @@ resource "azurerm_container_app" "prometheus" {
   revision_mode                = "Single"
 
   template {
+    min_replicas = 1
+    max_replicas = 1
+    
     container {
       name   = "prometheus"
       image  = "prom/prometheus:latest"
@@ -45,6 +48,9 @@ resource "azurerm_container_app" "loki" {
   revision_mode                = "Single"
 
   template {
+    min_replicas = 1
+    max_replicas = 1
+
     container {
       name   = "loki"
       image  = "grafana/loki:latest"
@@ -78,6 +84,8 @@ resource "azurerm_container_app" "grafana" {
   }
 
   template {
+    min_replicas = 1
+    max_replicas = 1
     container {
       name   = "grafana"
       image  = "grafana/grafana:latest"

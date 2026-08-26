@@ -16,3 +16,6 @@ output "ingest_app_name" {
 output "report_app_fqdn" {
   value       = module.platform.report_app_fqdn
 }
+output "grafana_url" {
+  value = module.platform.grafana_url
+}

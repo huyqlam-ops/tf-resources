@@ -378,8 +378,8 @@ resource "azurerm_container_app" "ingest" {
   }
 
   template {
-    min_replicas = 1
-    max_replicas = 2
+    min_replicas = 0
+    max_replicas = 1
 
     volume {
       name = "shared-logs"
@@ -443,7 +443,6 @@ resource "azurerm_container_app" "ingest" {
         name  = "AZURE_CLIENT_ID"
         value = azurerm_user_assigned_identity.ingest_identity.client_id
       }
-
       env {
         name = "LOG_FILE_PATH" 
         value = local.log_file_path

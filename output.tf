@@ -19,3 +19,9 @@ output "report_app_fqdn" {
 output "grafana_url" {
   value = module.platform.grafana_url
 }
+output "prometheus_url" {
+  value = module.platform.prometheus_url
+}
+output "loki_url" {
+  value = module.platform.loki_url
+}

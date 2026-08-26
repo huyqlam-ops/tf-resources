@@ -38,6 +38,14 @@ output "loki_internal_fqdn" {
   value = azurerm_container_app.loki.ingress[0].fqdn
 }
 
+output "prometheus_url" {
+  value = "https://${azurerm_container_app.prometheus.ingress[0].fqdn}"
+}
+
+output "loki_url" {
+  value = "https://${azurerm_container_app.loki.ingress[0].fqdn}"
+}
+
 output "grafana_url" {
   value = "https://${azurerm_container_app.grafana.ingress[0].fqdn}"
 }

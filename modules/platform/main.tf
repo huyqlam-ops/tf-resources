@@ -239,7 +239,7 @@ resource "azurerm_container_app" "report" {
   }
 
   secret {
-    name = "report_admin_password" 
+    name = "report-admin-password" 
     value = random_password.report_admin.result
   }
 
@@ -288,7 +288,7 @@ resource "azurerm_container_app" "report" {
       }
       env {
         name = "ADMIN_USER_PASSWORD" 
-        secret_name = "report_admin_password"  
+        secret_name = "report-admin-password"  
       }
     }
 

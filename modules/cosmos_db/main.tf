@@ -31,10 +31,10 @@ resource "azurerm_cosmosdb_sql_container" "container" {
 }
 
 # Quyền ghi Cosmos DB (built-in role 00000000-0000-0000-0000-000000000002 = Cosmos DB Built-in Data Contributor)
-# resource "azurerm_cosmosdb_sql_role_assignment" "cosmos_rbac" {
-#   resource_group_name = var.resource_group_name
-#   account_name        = azurerm_cosmosdb_account.cosmos.name
-#   role_definition_id  = "${azurerm_cosmosdb_account.cosmos.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
-#   principal_id        = data.azurerm_client_config.current.object_id
-#   scope                = azurerm_cosmosdb_account.cosmos.id
-# }
+resource "azurerm_cosmosdb_sql_role_assignment" "cosmos_rbac" {
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.cosmos.name
+  role_definition_id  = "${azurerm_cosmosdb_account.cosmos.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
+  principal_id        = data.azurerm_client_config.current.object_id
+  scope                = azurerm_cosmosdb_account.cosmos.id
+}

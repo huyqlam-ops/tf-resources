@@ -18,8 +18,8 @@ resource "azurerm_storage_container" "checkpoint" {
   container_access_type = "private"
 }
 
-# resource "azurerm_role_assignment" "blob_contributor" {
-#   scope                = azurerm_storage_account.storage.id
-#   role_definition_name = "Storage Blob Data Contributor"
-#   principal_id         = data.azurerm_client_config.current.object_id
-# }
+resource "azurerm_role_assignment" "blob_contributor" {
+  scope                = azurerm_storage_account.storage.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = data.azurerm_client_config.current.object_id
+}

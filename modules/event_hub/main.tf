@@ -14,8 +14,8 @@ resource "azurerm_eventhub" "eh" {
 }
 
 # Quyền đọc/ghi Event Hubs (RBAC - passwordless)
-# resource "azurerm_role_assignment" "eventhub_owner" {
-#   scope                = azurerm_eventhub_namespace.ehns.id
-#   role_definition_name = "Azure Event Hubs Data Owner"
-#   principal_id         = data.azurerm_client_config.current.object_id
-# }
+resource "azurerm_role_assignment" "eventhub_owner" {
+  scope                = azurerm_eventhub_namespace.ehns.id
+  role_definition_name = "Azure Event Hubs Data Owner"
+  principal_id         = data.azurerm_client_config.current.object_id
+}

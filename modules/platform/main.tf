@@ -307,7 +307,7 @@ resource "azurerm_container_app" "report" {
       args = [
         <<-EOT
         mkdir -p /var/log/app
-        touch /var/log/app/app.log
+        chmod 777 /var/log/app
 
         cat <<'EOF' > /etc/alloy/config.alloy
         loki.source.file "app_logs" {
@@ -316,6 +316,7 @@ resource "azurerm_container_app" "report" {
             app      = "report",
           }]
           forward_to = [loki.write.default.receiver]
+          read_from_tail = false
         }
 
         loki.write "default" {
@@ -374,6 +375,7 @@ resource "azurerm_container_app" "ingest" {
 
     volume {
       name = "shared-logs"
+      storage_type = "EmptyDir"
     }
 
     custom_scale_rule {
@@ -458,7 +460,7 @@ resource "azurerm_container_app" "ingest" {
       args = [
         <<-EOT
         mkdir -p /var/log/app
-        touch /var/log/app/app.log
+        chmod 777 /var/log/app
 
         cat <<'EOF' > /etc/alloy/config.alloy
         loki.source.file "app_logs" {
@@ -467,6 +469,7 @@ resource "azurerm_container_app" "ingest" {
             app      = "ingest",
           }]
           forward_to = [loki.write.default.receiver]
+          read_from_tail = false
         }
 
         loki.write "default" {

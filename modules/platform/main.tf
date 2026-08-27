@@ -244,7 +244,7 @@ resource "azurerm_container_app" "report" {
   }
 
   template {
-    min_replicas = 1
+    min_replicas = 0
     max_replicas = 1
 
     volume {
@@ -306,26 +306,41 @@ resource "azurerm_container_app" "report" {
       command = ["/bin/sh", "-c"]
       args = [
         <<-EOT
-        mkdir -p /var/log/app
-        chmod 777 /var/log/app
-
-        cat <<'EOF' > /etc/alloy/config.alloy
-        loki.source.file "app_logs" {
-          targets = [{
-            __path__ = "/var/log/app/app.log",
-            app      = "report",
-          }]
-          forward_to = [loki.write.default.receiver]
-          read_from_tail = false
-        }
-
-        loki.write "default" {
-          endpoint {
-            url = "https://${azurerm_container_app.loki.ingress[0].fqdn}/loki/api/v1/push"
+        echo '${base64encode(<<-CONFIG
+          prometheus.scrape "app" {
+            targets = [{"__address__" = "localhost:8080"}]
+            metrics_path = "/actuator/prometheus"
+            forward_to = [prometheus.remote_write.default.receiver]
           }
-        }
-        EOF
-        exec /bin/alloy run /etc/alloy/config.alloy --server.http.listen-addr=0.0.0.0:12345 --stability.level=experimental
+
+          prometheus.remote_write "default" {
+            endpoint {
+              url = "https://${azurerm_container_app.prometheus.ingress[0].fqdn}/api/v1/write"
+            }
+          }
+
+          loki.source.file "app_logs" {
+            targets = [{
+              __path__ = "/var/log/app/*.log",
+              app      = "report",
+            }]
+            forward_to    = [loki.write.default.receiver]
+            tail_from_end = false
+
+            file_match {
+              enabled     = true
+              sync_period = "5s"
+            }
+          }
+
+          loki.write "default" {
+            endpoint {
+              url = "https://${azurerm_container_app.loki.ingress[0].fqdn}/loki/api/v1/push"
+            }
+          }
+        CONFIG
+        )}' | base64 -d > /etc/alloy/config.alloy
+        exec /bin/alloy run /etc/alloy/config.alloy --server.http.listen-addr=0.0.0.0:12345
         EOT
       ]
     }
@@ -371,11 +386,10 @@ resource "azurerm_container_app" "ingest" {
 
   template {
     min_replicas = 0
-    max_replicas = 2
+    max_replicas = 1
 
     volume {
       name = "shared-logs"
-      storage_type = "EmptyDir"
     }
 
     custom_scale_rule {
@@ -459,39 +473,41 @@ resource "azurerm_container_app" "ingest" {
       command = ["/bin/sh", "-c"]
       args = [
         <<-EOT
-        mkdir -p /var/log/app
-        chmod 777 /var/log/app
-
-        cat <<'EOF' > /etc/alloy/config.alloy
-        loki.source.file "app_logs" {
-          targets = [{
-            __path__ = "/var/log/app/app.log",
-            app      = "ingest",
-          }]
-          forward_to = [loki.write.default.receiver]
-          read_from_tail = false
-        }
-
-        loki.write "default" {
-          endpoint {
-            url = "https://${azurerm_container_app.loki.ingress[0].fqdn}/loki/api/v1/push"
+        echo '${base64encode(<<-CONFIG
+          prometheus.scrape "app" {
+            targets = [{"__address__" = "localhost:8080"}]
+            metrics_path = "/actuator/prometheus"
+            forward_to = [prometheus.remote_write.default.receiver]
           }
-        }
-        
-        prometheus.scrape "app" {
-          targets = [{"__address__" = "localhost:8080"}]
-          metrics_path = "/actuator/prometheus"
-          forward_to = [prometheus.remote_write.default.receiver]
-        }
 
-        prometheus.remote_write "default" {
-          endpoint {
-            url = "https://${azurerm_container_app.prometheus.ingress[0].fqdn}/api/v1/write"
+          prometheus.remote_write "default" {
+            endpoint {
+              url = "https://${azurerm_container_app.prometheus.ingress[0].fqdn}/api/v1/write"
+            }
           }
-        }
 
-        EOF
-        exec /bin/alloy run /etc/alloy/config.alloy --server.http.listen-addr=0.0.0.0:12345 --stability.level=experimental
+          loki.source.file "app_logs" {
+            targets = [{
+              __path__ = "/var/log/app/*.log",
+              app      = "ingest",
+            }]
+            forward_to    = [loki.write.default.receiver]
+            tail_from_end = false
+
+            file_match {
+              enabled     = true
+              sync_period = "5s"
+            }
+          }
+
+          loki.write "default" {
+            endpoint {
+              url = "https://${azurerm_container_app.loki.ingress[0].fqdn}/loki/api/v1/push"
+            }
+          }
+        CONFIG
+        )}' | base64 -d > /etc/alloy/config.alloy
+        exec /bin/alloy run /etc/alloy/config.alloy --server.http.listen-addr=0.0.0.0:12345
         EOT
       ]
     }

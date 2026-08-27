@@ -379,7 +379,7 @@ resource "azurerm_container_app" "ingest" {
 
   template {
     min_replicas = 0
-    max_replicas = 1
+    max_replicas = 2
 
     volume {
       name = "shared-logs"
@@ -396,6 +396,9 @@ resource "azurerm_container_app" "ingest" {
             blobContainer      = var.storage.checkpoint_container_name
             checkpointStrategy = "blobMetadata"
             storageAccountName = var.storage.name
+
+            activationUnprocessedEventThreshold = "1"
+            unprocessedEventThreshold           = "64"
         }
         identity_id = azurerm_user_assigned_identity.ingest_identity.id
     }

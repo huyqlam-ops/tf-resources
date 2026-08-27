@@ -310,21 +310,9 @@ resource "azurerm_container_app" "report" {
         touch /var/log/app/app.log
 
         cat <<'EOF' > /etc/alloy/config.alloy
-        prometheus.scrape "app" {
-          targets = [{"__address__" = "localhost:8080"}]
-          metrics_path = "/actuator/prometheus"
-          forward_to = [prometheus.remote_write.default.receiver]
-        }
-
-        prometheus.remote_write "default" {
-          endpoint {
-            url = "https://${azurerm_container_app.prometheus.ingress[0].fqdn}/api/v1/write"
-          }
-        }
-
         loki.source.file "app_logs" {
           targets = [{
-            __path__ = "/var/log/app/app.log",
+            __path__ = "/var/log/app/*.log",
             app      = "report",
           }]
           forward_to = [loki.write.default.receiver]
@@ -473,6 +461,20 @@ resource "azurerm_container_app" "ingest" {
         touch /var/log/app/app.log
 
         cat <<'EOF' > /etc/alloy/config.alloy
+        loki.source.file "app_logs" {
+          targets = [{
+            __path__ = "/var/log/app/*.log",
+            app      = "ingest",
+          }]
+          forward_to = [loki.write.default.receiver]
+        }
+
+        loki.write "default" {
+          endpoint {
+            url = "https://${azurerm_container_app.loki.ingress[0].fqdn}/loki/api/v1/push"
+          }
+        }
+
         prometheus.scrape "app" {
           targets = [{"__address__" = "localhost:8080"}]
           metrics_path = "/actuator/prometheus"
@@ -482,20 +484,6 @@ resource "azurerm_container_app" "ingest" {
         prometheus.remote_write "default" {
           endpoint {
             url = "https://${azurerm_container_app.prometheus.ingress[0].fqdn}/api/v1/write"
-          }
-        }
-
-        loki.source.file "app_logs" {
-          targets = [{
-            __path__ = "/var/log/app/app.log",
-            app      = "ingest",
-          }]
-          forward_to = [loki.write.default.receiver]
-        }
-
-        loki.write "default" {
-          endpoint {
-            url = "https://${azurerm_container_app.loki.ingress[0].fqdn}/loki/api/v1/push"
           }
         }
         EOF

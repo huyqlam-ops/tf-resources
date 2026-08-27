@@ -31,6 +31,7 @@ module "cosmos_db" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   suffix              = random_string.suffix.result
+  current_object_id = data.azurerm_client_config.current.object_id
 }
 
 module "platform" {

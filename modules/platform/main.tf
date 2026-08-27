@@ -312,7 +312,7 @@ resource "azurerm_container_app" "report" {
         cat <<'EOF' > /etc/alloy/config.alloy
         loki.source.file "app_logs" {
           targets = [{
-            __path__ = "/var/log/app/*.log",
+            __path__ = "/var/log/app/app.log",
             app      = "report",
           }]
           forward_to = [loki.write.default.receiver]
@@ -463,7 +463,7 @@ resource "azurerm_container_app" "ingest" {
         cat <<'EOF' > /etc/alloy/config.alloy
         loki.source.file "app_logs" {
           targets = [{
-            __path__ = "/var/log/app/*.log",
+            __path__ = "/var/log/app/app.log",
             app      = "ingest",
           }]
           forward_to = [loki.write.default.receiver]

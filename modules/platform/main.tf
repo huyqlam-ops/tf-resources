@@ -306,6 +306,9 @@ resource "azurerm_container_app" "report" {
       command = ["/bin/sh", "-c"]
       args = [
         <<-EOT
+        mkdir -p /var/log/app
+        touch /var/log/app/app.log
+
         cat <<'EOF' > /etc/alloy/config.alloy
         prometheus.scrape "app" {
           targets = [{"__address__" = "localhost:8080"}]
@@ -466,6 +469,9 @@ resource "azurerm_container_app" "ingest" {
       command = ["/bin/sh", "-c"]
       args = [
         <<-EOT
+        mkdir -p /var/log/app
+        touch /var/log/app/app.log
+
         cat <<'EOF' > /etc/alloy/config.alloy
         prometheus.scrape "app" {
           targets = [{"__address__" = "localhost:8080"}]

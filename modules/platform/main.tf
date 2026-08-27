@@ -474,7 +474,7 @@ resource "azurerm_container_app" "ingest" {
             url = "https://${azurerm_container_app.loki.ingress[0].fqdn}/loki/api/v1/push"
           }
         }
-
+        
         prometheus.scrape "app" {
           targets = [{"__address__" = "localhost:8080"}]
           metrics_path = "/actuator/prometheus"
@@ -486,6 +486,7 @@ resource "azurerm_container_app" "ingest" {
             url = "https://${azurerm_container_app.prometheus.ingress[0].fqdn}/api/v1/write"
           }
         }
+
         EOF
         exec /bin/alloy run /etc/alloy/config.alloy --server.http.listen-addr=0.0.0.0:12345 --stability.level=experimental
         EOT

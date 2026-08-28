@@ -310,6 +310,7 @@ resource "azurerm_container_app" "report" {
           prometheus.scrape "app" {
             targets = [{"__address__" = "localhost:8080"}]
             metrics_path = "/actuator/prometheus"
+            scrape_interval = "15s"
             forward_to = [prometheus.remote_write.default.receiver]
           }
 
@@ -477,6 +478,7 @@ resource "azurerm_container_app" "ingest" {
           prometheus.scrape "app" {
             targets = [{"__address__" = "localhost:8080"}]
             metrics_path = "/actuator/prometheus"
+            scrape_interval = "15s"
             forward_to = [prometheus.remote_write.default.receiver]
           }
 

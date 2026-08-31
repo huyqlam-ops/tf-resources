@@ -32,7 +32,7 @@ module "messaging" {
   suffix              = random_string.suffix.result
   current_object_id = data.azurerm_client_config.current.object_id
   storage_account_id = module.storage.storage_account_id
-  event_grid_subcription_folder = "/blobServices/default/containers/${module.storage.storage_container_name}/${local.batch_raw_data_dir}/"
+  event_grid_subcription_folder = "/blobServices/default/containers/${module.storage.storage_container_name}/blobs/${local.batch_raw_data_dir}/"
 }
 
 module "cosmos_db" {

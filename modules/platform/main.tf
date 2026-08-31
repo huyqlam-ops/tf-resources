@@ -437,7 +437,7 @@ resource "azurerm_container_app" "ingest" {
             checkpointStrategy = "blobMetadata"
             storageAccountName = var.storage.name
 
-            activationUnprocessedEventThreshold = "1"
+            activationUnprocessedEventThreshold = "0"
             unprocessedEventThreshold           = "64"
         }
         identity_id = azurerm_user_assigned_identity.ingest_identity.id
@@ -585,19 +585,19 @@ resource "azurerm_container_app" "batchingest" {
 
   template {
     min_replicas = 0
-    max_replicas = 1
+    max_replicas = 2
 
     volume {
       name = "shared-logs"
     }
 
     custom_scale_rule {
-        name = "batchingest-ca-eventhub-scale-rule"
+        name = "batchingest-ca-servicebus-scale-rule"
         custom_rule_type = "azure-servicebus"
         metadata = { 
             queueName = var.servicebus_queue_name
             namespace = var.servicebus_namespace
-            activationMessageCount = "1"
+            activationMessageCount = "0"
             messageCount = "5"
         }
         identity_id = azurerm_user_assigned_identity.batchingest_identity.id
@@ -640,7 +640,7 @@ resource "azurerm_container_app" "batchingest" {
       }
       env {
         name  = "AZURE_CLIENT_ID"
-        value = azurerm_user_assigned_identity.ingest_identity.client_id
+        value = azurerm_user_assigned_identity.batchingest_identity.client_id
       }
       env {
         name = "LOG_FILE_PATH" 

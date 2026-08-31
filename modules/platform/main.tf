@@ -580,7 +580,7 @@ resource "azurerm_container_app" "batchingest" {
 
   registry {
     server   = azurerm_container_registry.acr.login_server
-    identity = azurerm_user_assigned_identity.ingest_identity.id
+    identity = azurerm_user_assigned_identity.batchingest_identity.id
   }
 
   template {

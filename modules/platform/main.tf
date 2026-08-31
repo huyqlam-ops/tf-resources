@@ -631,6 +631,14 @@ resource "azurerm_container_app" "batchingest" {
         value = var.cosmosdb.database_name
       }
       env {
+        name  = "AZURE_SERVICEBUS_NAMESPACE"
+        value = var.servicebus_namespace
+      }
+      env {
+        name  = "AZURE_SERVICEBUS_QUEUE_NAME"
+        value = var.servicebus_queue_name
+      }
+      env {
         name  = "AZURE_CLIENT_ID"
         value = azurerm_user_assigned_identity.ingest_identity.client_id
       }

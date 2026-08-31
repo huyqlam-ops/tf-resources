@@ -1,6 +1,11 @@
 variable "resource_group_name" { type = string }
-variable "location"            { type = string }
-variable "suffix"              { type = string }
+variable "location" { type = string }
+variable "suffix" { type = string }
+variable "raw_data_dir" { type = string }
+variable "data_dir" { type = string }
+variable "servicebus_queue_name" { type = string }
+variable "servicebus_namespace" { type = string }
+variable "servicebus_namespace_id" { type = string }
 
 variable "storage" {
   type = object({
@@ -27,3 +32,4 @@ variable "cosmosdb" {
     database_name = string
   })
 }
+

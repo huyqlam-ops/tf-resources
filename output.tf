@@ -25,3 +25,9 @@ output "prometheus_url" {
 output "loki_url" {
   value = module.platform.loki_url
 }
+output "servicebus_namespace" {
+  value = module.messaging.servicebus_namespace
+}
+output "servicebus_queue_name" {
+  value = module.messaging.servicebus_queue_name
+}
